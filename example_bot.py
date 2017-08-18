@@ -11,33 +11,24 @@ from matrix_bot_api.mregex_handler import MRegexHandler
 from matrix_bot_api.mcommand_handler import MCommandHandler
 from matrix_bot_api.cli import get_command
 
+from matrix_bot_api.handlers.dance import dance_handler
+from matrix_bot_api.handlers.dice import dice_handler
+from matrix_bot_api.handlers.echo import echo_handler
+from matrix_bot_api.handlers.hello import hello_handler
+from matrix_bot_api.handlers.love import love_handler
+
 from config import *
-
-def hi_callback(room, event):
-    # Somebody said hi, let's say Hi back
-    sender = room.client.api.get_display_name(event['sender'])
-    room.send_text("Hi, {}!".format(sender))
-
-def echo_callback(room, event):
-    args = event['content']['body'].split()
-    args.pop(0)
-
-    # Echo what they said back
-    room.send_text(' '.join(args))
 
 def main():
     # Create an instance of the MatrixBotAPI
     bot = MatrixBotAPI(USERNAME, PASSWORD, SERVER, ROOMS, AVATAR, DISPLAYNAME)
 
-    # Add a regex handler waiting for the word Hi
-    hi_handler = MRegexHandler(r"(^hi\b|^hello\b|^howdy\b)",
-                               hi_callback,
-                               case_sensitive=False)
-    bot.add_handler(hi_handler)
-
-    # Add a regex handler waiting for the echo command
-    echo_handler = MCommandHandler("echo", echo_callback)
+    # Add handlers
+    bot.add_handler(dance_handler)
+    bot.add_handler(dice_handler)
     bot.add_handler(echo_handler)
+    bot.add_handler(hello_handler)
+    bot.add_handler(love_handler)
 
     # Start polling
     bot.start_polling()
