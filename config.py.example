@@ -1,0 +1,17 @@
+import os
+
+# Bot's username
+USERNAME = "@bot:matrix.org"  
+
+# Bot's password
+PASSWORD = "APhraseThatIsAlmostButNotQuiteEntirelyUnlikeAPassword" 
+
+# Matrix server URL
+SERVER = "https://matrix.org"
+
+# Room ID's (not names or aliases!) to automatically join, if not already.
+ROOMS = None
+
+# Bot's profile settings
+DISPLAYNAME = "Matrix Bot"
+AVATAR = os.path.abspath("image.png")
