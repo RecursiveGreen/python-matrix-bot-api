@@ -69,6 +69,13 @@ envs3
 # PyCharm
 .idea
 
+# VS Code
+.vscode/
+
 # OS files
 .DS_Store
 *.swp
+
+# Application configuration files
+img/
+config.py
