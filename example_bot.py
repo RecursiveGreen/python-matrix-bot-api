@@ -9,17 +9,14 @@ Test it out by adding it to a group chat and doing one of the following:
 from matrix_bot_api.matrix_bot_api import MatrixBotAPI
 from matrix_bot_api.mregex_handler import MRegexHandler
 from matrix_bot_api.mcommand_handler import MCommandHandler
+from matrix_bot_api.cli import get_command
 
-# Global variables
-USERNAME = ""  # Bot's username
-PASSWORD = ""  # Bot's password
-SERVER = ""  # Matrix server URL
-
+from config import *
 
 def hi_callback(room, event):
     # Somebody said hi, let's say Hi back
-    room.send_text("Hi, " + event['sender'])
-
+    sender = room.client.api.get_display_name(event['sender'])
+    room.send_text("Hi, {}!".format(sender))
 
 def echo_callback(room, event):
     args = event['content']['body'].split()
@@ -28,13 +25,14 @@ def echo_callback(room, event):
     # Echo what they said back
     room.send_text(' '.join(args))
 
-
 def main():
     # Create an instance of the MatrixBotAPI
-    bot = MatrixBotAPI(USERNAME, PASSWORD, SERVER)
+    bot = MatrixBotAPI(USERNAME, PASSWORD, SERVER, ROOMS, AVATAR, DISPLAYNAME)
 
     # Add a regex handler waiting for the word Hi
-    hi_handler = MRegexHandler("Hi", hi_callback)
+    hi_handler = MRegexHandler(r"(^hi\b|^hello\b|^howdy\b)",
+                               hi_callback,
+                               case_sensitive=False)
     bot.add_handler(hi_handler)
 
     # Add a regex handler waiting for the echo command
@@ -44,10 +42,43 @@ def main():
     # Start polling
     bot.start_polling()
 
-    # Infinitely read stdin to stall main thread while the bot runs in other threads
+    # Allow for direct interaction
+    current_room = None
+    
     while True:
-        input()
+        if current_room:
+            prompt = current_room.name + ": "
+        else:
+            prompt = "<" + bot.username + ">: "
 
+        msg = input(prompt)
+        cmd = get_command(msg)
+
+        if msg:
+            if cmd:
+                if cmd['command'] == "attach":
+                    rid = cmd['args'].split()[0]
+                    found = False
+                    for room_id, room in bot.client.get_rooms().items():
+                        if room_id == rid:
+                            current_room = room
+                            found = True
+                    if not found:
+                        print("ERROR: Not joined to this room or invalid room id.")
+                elif cmd['command'] == "joined":
+                    for rid, room in bot.client.get_rooms().items():
+                        print(rid)
+                        print("    (Name: {}, Aliases: {})".format(room.name,
+                                                                   room.aliases))
+                elif cmd['command'] == "quit":
+                    break
+                else:
+                    print("ERROR: Unknown command.")
+            else:
+                if current_room:
+                    current_room.send_text(msg)
+                else:
+                    print("ERROR: Select room to send message to with /attach.")
 
 if __name__ == "__main__":
     main()

@@ -1,8 +1,10 @@
 import traceback
 import re
+
 from matrix_client.client import MatrixClient
 from matrix_client.api import MatrixRequestError
 
+from .media import prepare_image
 
 class MatrixBotAPI:
 
@@ -10,7 +12,13 @@ class MatrixBotAPI:
     # password - Matrix password
     # server   - Matrix server url : port
     # rooms    - List of rooms ids to operate in, or None to accept all rooms
-    def __init__(self, username, password, server, rooms=None):
+    def __init__(self,
+                 username,
+                 password,
+                 server,
+                 rooms=None,
+                 avatar=None,
+                 displayname=None):
         self.username = username
 
         # Authenticate with given credentials
@@ -24,6 +32,14 @@ class MatrixBotAPI:
         except Exception as e:
             print("Invalid server URL")
             traceback.print_exc()
+
+        # Set profile defaults
+        if avatar:
+            pic = prepare_image(self.client, avatar)
+            self.client.api.set_avatar_url(self.username, pic['uri'])
+        
+        if displayname:
+            self.client.api.set_display_name(self.username, displayname)
 
         # Store allowed rooms
         self.rooms = rooms
@@ -50,7 +66,7 @@ class MatrixBotAPI:
 
     def handle_message(self, room, event):
         # Make sure we didn't send this message
-        if re.match("@" + self.username, event['sender']):
+        if re.match(self.username, event['sender']):
             return
 
         # Loop through all installed handlers and see if they need to be called
@@ -63,7 +79,7 @@ class MatrixBotAPI:
         print("Got invite to room: " + str(room_id))
         print("Joining...")
         room = self.client.join_room(room_id)
-
+        
         # Add message callback for this room
         room.add_listener(self.handle_message)
 
