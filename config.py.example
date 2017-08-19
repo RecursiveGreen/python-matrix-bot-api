@@ -14,4 +14,11 @@ ROOMS = None
 
 # Bot's profile settings
 DISPLAYNAME = "Matrix Bot"
-AVATAR = os.path.abspath("image.png")
+AVATAR = os.path.abspath("avatar.png")
+
+#
+# Optional handler settings
+#
+
+# Dance Handler -- if commented out, an emote is sent instead.
+# DANCE = os.path.abspath("dance.gif")
