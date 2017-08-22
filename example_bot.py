@@ -17,11 +17,9 @@ from matrix_bot_api.handlers.echo import echo_handler
 from matrix_bot_api.handlers.hello import hello_handler
 from matrix_bot_api.handlers.love import love_handler
 
-from config import *
-
 def main():
     # Create an instance of the MatrixBotAPI
-    bot = MatrixBotAPI(USERNAME, PASSWORD, SERVER, ROOMS, AVATAR, DISPLAYNAME)
+    bot = MatrixBotAPI()
 
     # Add handlers
     bot.add_handler(dance_handler)
@@ -38,7 +36,8 @@ def main():
     
     while True:
         if current_room:
-            prompt = current_room.name + ": "
+            n = current_room.name if current_room.name else current_room.room_id
+            prompt = n + ": "
         else:
             prompt = "<" + bot.username + ">: "
 
@@ -56,11 +55,26 @@ def main():
                             found = True
                     if not found:
                         print("ERROR: Not joined to this room or invalid room id.")
+                elif cmd['command'] == "deattach":
+                    current_room = None
+                elif cmd['command'] == "join":
+                    r = cmd['args'].split()[0]
+                    found = False
+                    for room_id, room in bot.client.get_rooms().items():
+                        if r == room_id or r in room.aliases:
+                            print("ERROR: Already joined to this room.")
+                            found = True
+                    if not found:
+                        new_room = bot.client.join_room(r)
+                        current_room = new_room
                 elif cmd['command'] == "joined":
                     for rid, room in bot.client.get_rooms().items():
                         print(rid)
                         print("    (Name: {}, Aliases: {})".format(room.name,
                                                                    room.aliases))
+                elif cmd['command'] == 'leave':
+                    current_room.leave()
+                    current_room = None
                 elif cmd['command'] == "quit":
                     break
                 else:
